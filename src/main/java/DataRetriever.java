@@ -23,7 +23,6 @@ public class DataRetriever {
 
             while (rs.next()) {
                 if (dish == null) {
-                    // 1. Créer le plat une seule fois
                     dish = new Dish(
                             rs.getInt("id"),
                             rs.getString("name"),
@@ -31,9 +30,8 @@ public class DataRetriever {
                     );
                 }
 
-                // 2. Récupérer l'ingrédient
                 int ingId = rs.getInt("ing_id");
-                if (ingId != 0) { // Si ing_id est 0, pas d'ingrédient
+                if (ingId != 0) {
                     Ingredient ing = new Ingredient(
                             ingId,
                             rs.getString("ing_name"),
@@ -48,7 +46,6 @@ public class DataRetriever {
             throw new RuntimeException(e);
         }
 
-        // Gestion de l'exception si plat non trouvé (point 7.b)
         if (dish == null) {
             throw new RuntimeException("Plat non trouvé avec l'id : " + id);
         }
@@ -101,13 +98,14 @@ public class DataRetriever {
 
     public List<Ingredient> createIngredients(List<Ingredient> newIngredients) throws SQLException {
         Connection conn = null;
-        String sql = "INSERT INTO Ingredient (name, price, category_ingredient, id_dish) VALUES (?, ?, ?::category, ?)";
+        String sql = "INSERT INTO Ingredient (id, name, price, category_ingredient, id_dish) " +
+                "VALUES (nextval('ingredient_id_seq'), ?, ?, ?::category, ?)";
 
         try {
             conn = DBConnection.getDBConnection();
             conn.setAutoCommit(false);
 
-            try (PreparedStatement pstmt = conn.prepareStatement(sql, java.sql.Statement.RETURN_GENERATED_KEYS)) {
+            try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 for (Ingredient ingredient : newIngredients) {
                     pstmt.setString(1, ingredient.getName());
                     pstmt.setDouble(2, ingredient.getPrice());
@@ -118,35 +116,22 @@ public class DataRetriever {
                     } else {
                         pstmt.setNull(4, java.sql.Types.INTEGER);
                     }
-
                     pstmt.executeUpdate();
 
-                    try (java.sql.ResultSet rs = pstmt.getGeneratedKeys()) {
-                        if (rs.next()) {
-                            ingredient.setId(rs.getInt(1));
+                    try (PreparedStatement pstmtSeq = conn.prepareStatement("SELECT lastval()")) {
+                        try (ResultSet rs = pstmtSeq.executeQuery()) {
+                            if (rs.next()) {
+                                ingredient.setId(rs.getInt(1));
+                            }
                         }
                     }
                 }
                 conn.commit();
             }
         } catch (SQLException e) {
-        if (conn != null) conn.rollback();
-
-        String msg = e.getMessage();
-        if (msg.contains("dupliquée") || msg.contains("duplicate")) {
-            String duplicateName = "inconnu";
-
-            if (msg.contains(")=(")) {
-                int start = msg.indexOf(")=(") + 3;
-                int end = msg.indexOf(")", start);
-                duplicateName = msg.substring(start, end);
-            }
-
-            throw new RuntimeException("L'insertion a échoué car l'ingrédient '" + duplicateName + "' existe déjà.");
-        }
-
-        throw new RuntimeException("Erreur lors de l'insertion : " + e.getMessage());
-    } finally {
+            if (conn != null) conn.rollback();
+            throw new RuntimeException(e.getMessage());
+        } finally {
             if (conn != null) conn.close();
         }
         return newIngredients;

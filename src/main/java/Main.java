@@ -30,7 +30,7 @@ public class Main {
         System.out.println();
         List<Ingredient> toCreateFail = List.of(
                 new Ingredient(0, "Carotte", 2000.0, CategoryEnum.VEGETABLE, null),
-                new Ingredient(0, "Laitue", 800.0, CategoryEnum.VEGETABLE, null) // La laitue existe déjà (id 1)
+                new Ingredient(0, "Laitue", 800.0, CategoryEnum.VEGETABLE, null)
         );
         testCreateIngredients(retriever, toCreateFail);
         System.out.println();
