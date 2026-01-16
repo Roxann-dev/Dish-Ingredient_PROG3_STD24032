@@ -19,16 +19,21 @@ public class Dish {
     }
 
     public Double getDishCost() {
-        if (ingredients == null) return 0.0;
-        double totalPrice = 0;
-        for (Ingredient ing : ingredients) {
-            Double q = ing.getQuantity();
-            if (q == null) {
-                throw new RuntimeException("Quantity is missing for ingredient: " + ing.getName());
-            }
-            totalPrice += ing.getPrice() * q;
+        if (this.ingredients == null || this.ingredients.isEmpty()) {
+            return 0.0;
         }
-        return totalPrice;
+
+        double totalCost = 0.0;
+
+        for (Ingredient ing : ingredients) {
+            Double pricePerUnit = ing.getPrice();
+            Double quantityRequired = ing.getQuantity();
+
+            if (pricePerUnit != null && quantityRequired != null) {
+                totalCost += pricePerUnit * quantityRequired;
+            }
+        }
+        return totalCost;
     }
 
     public Double getGrossMargin() {
