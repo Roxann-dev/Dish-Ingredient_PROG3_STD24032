@@ -11,3 +11,12 @@ grant create on schema public to mini_dish_db_manager;
 alter default privileges in schema public grant select , insert , update , delete on tables to mini_dish_db_manager;
 
 alter default privileges in schema public grant usage , select , update on sequences to mini_dish_db_manager;
+
+alter table Dish add column if not exists price numeric(10, 2) default null;
+
+ALTER TABLE Dish ADD CONSTRAINT dish_name_unique UNIQUE (name);
+ALTER TABLE Ingredient ADD CONSTRAINT ingredient_name_unique UNIQUE (name);
+
+ALTER TABLE ingredient RENAME COLUMN category_ingredient TO category;
+
+ALTER TABLE ingredient ADD COLUMN required_quantity DOUBLE PRECISION;
